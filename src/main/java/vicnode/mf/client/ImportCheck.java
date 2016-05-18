@@ -1,6 +1,8 @@
 package vicnode.mf.client;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.FileVisitResult;
@@ -39,8 +41,10 @@ public class ImportCheck {
         Boolean localRemote = null;
         Integer maxThreads = null;
         Boolean noCsumCheck = null;
+        File outputFile = null;
         String namespace = args[args.length - 2];
         File directory = new File(args[args.length - 1]);
+
         try {
             if (!directory.exists()) {
                 throw new IllegalArgumentException("Local directory: \""
@@ -126,10 +130,26 @@ public class ImportCheck {
                     }
                     noCsumCheck = true;
                     i++;
+                } else if (args[i].equals("--output")) {
+                    if (outputFile != null) {
+                        throw new IllegalArgumentException(
+                                "Expects only one --output argument.");
+                    }
+                    outputFile = new File(args[i + 1]);
+                    if (outputFile.exists()) {
+                        throw new IllegalArgumentException("Output file: \""
+                                + args[i + 1] + "\" already exists.");
+                    }
+                    i += 2;
                 } else {
                     throw new IllegalArgumentException(
                             "Unexpected argument: " + args[i]);
                 }
+            }
+
+            if (outputFile == null) {
+                throw new IllegalArgumentException(
+                        "Missing --output argument.");
             }
 
             if (host == null) {
@@ -210,6 +230,8 @@ public class ImportCheck {
             RemoteServer server = new RemoteServer(host, port, useHttp,
                     encrypt);
             ServerClient.Connection cxn = server.open();
+            final PrintStream out = new PrintStream(new BufferedOutputStream(
+                    new FileOutputStream(outputFile, false)));
             try {
                 if (auth != null) {
                     String[] parts = auth.split(",");
@@ -231,8 +253,7 @@ public class ImportCheck {
                 ResultHandler rh = new ResultHandler() {
                     @Override
                     public void checked(Result result) {
-                        System.out.println(result.assetPath() + " : "
-                                + result.filePath() + " : " + result.match());
+                        result.println(out);
                     }
                 };
                 if (localRemote) {
@@ -244,6 +265,7 @@ public class ImportCheck {
                 }
             } finally {
                 cxn.close();
+                out.close();
             }
         } catch (Throwable e) {
             e.printStackTrace(System.err);
@@ -375,6 +397,8 @@ public class ImportCheck {
                 "    --max-threads <number-of-threads>   Maximum number of threads. Defaults to 1.");
         ps.println(
                 "    --no-csum-check                     Do not compare (crc32) checksums.");
+        ps.println(
+                "    --output <file>                     Output file in CSV format.");
 
     }
 

@@ -1,6 +1,7 @@
 package vicnode.mf.client;
 
 import java.io.File;
+import java.io.PrintStream;
 
 import arc.mf.client.ServerClient.Connection;
 import arc.xml.XmlDoc;
@@ -163,5 +164,27 @@ public class Result {
         } else {
             return checksumMatch();
         }
+    }
+
+    public void println(PrintStream out) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\"").append(_assetPath).append("\",");
+        sb.append(_assetContentSize).append(",");
+        if (!_noCsumCheck) {
+            sb.append(_assetContentChecksum == null ? null
+                    : Long.toHexString(_assetContentChecksum.longValue()))
+                    .append(",");
+        }
+        sb.append("\"").append(filePath()).append("\",");
+        sb.append(fileSize()).append(",");
+        if (!_noCsumCheck) {
+            sb.append(_fileChecksum == null ? null
+                    : Long.toHexString(_fileChecksum.longValue())).append(",");
+        }
+        sb.append(sizeMatch() ? "Y" : "N").append(",");
+        if (!_noCsumCheck) {
+            sb.append(checksumMatch() ? "Y" : "N").append(",");
+        }
+        out.println(sb.toString());
     }
 }
