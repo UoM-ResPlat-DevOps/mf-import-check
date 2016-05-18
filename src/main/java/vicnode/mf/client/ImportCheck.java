@@ -304,6 +304,17 @@ public class ImportCheck {
                         @Override
                         public void run() {
                             try {
+                                String assetId = ae.value("@id");
+                                String assetNamespace = ae.value("namespace");
+                                String assetName = ae.value("name");
+                                String assetPath = assetNamespace + "/"
+                                        + (assetName == null
+                                                ? ("__asset_id__" + assetId)
+                                                : assetName);
+                                System.out.println("Thread "
+                                        + Thread.currentThread().getId()
+                                        + ": checking asset \"" + assetPath
+                                        + "\"...");
                                 Result result = new Result(ae, namespace,
                                         directory, noCsumCheck);
                                 if (rh != null) {
@@ -344,6 +355,10 @@ public class ImportCheck {
 
                             @Override
                             public void run() {
+                                System.out.println("Thread "
+                                        + Thread.currentThread().getId()
+                                        + ": checking file \""
+                                        + file.getAbsolutePath() + "\"...");
                                 try {
                                     Result result = new Result(file, cxn,
                                             directory, namespace, noCsumCheck);

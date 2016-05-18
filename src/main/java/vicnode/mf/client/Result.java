@@ -51,7 +51,7 @@ public class Result {
             _file = null;
         }
         if (_file != null && !noCsumCheck) {
-            _fileChecksum = ChecksumUtils.crc32(_file);
+            _fileChecksum = calculateCRC32(_file);
         }
     }
 
@@ -63,7 +63,7 @@ public class Result {
 
         _file = file;
         if (!noCsumCheck) {
-            _fileChecksum = ChecksumUtils.crc32(_file);
+            _fileChecksum = calculateCRC32(_file);
         }
         _relativePath = PathUtils.extractRelativePath(file, baseDirectory);
         _assetPath = PathUtils.joinPaths(_baseNamespace, _relativePath);
@@ -81,6 +81,14 @@ public class Result {
                 _assetContentChecksum = null;
             }
         }
+    }
+
+    private static long calculateCRC32(File file) throws Throwable {
+        System.out.print("Thread " + Thread.currentThread().getId()
+                + ": Calculating CRC32 checksum for file: \""
+                + file.getAbsolutePath() + "\"...");
+        long csum = ChecksumUtils.crc32(file);
+        return csum;
     }
 
     public String baseNamespace() {
@@ -179,7 +187,8 @@ public class Result {
         sb.append(fileSize()).append(",");
         if (!_noCsumCheck) {
             sb.append(_fileChecksum == null ? null
-                    : Long.toHexString(_fileChecksum.longValue())).append(",");
+                    : Long.toHexString(_fileChecksum.longValue()).toUpperCase())
+                    .append(",");
         }
         sb.append(sizeMatch() ? "Y" : "N").append(",");
         if (!_noCsumCheck) {
