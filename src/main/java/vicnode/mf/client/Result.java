@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.PrintStream;
 
 import arc.mf.client.ServerClient.Connection;
+import arc.utils.ObjectUtil;
 import arc.xml.XmlDoc;
 import vicnode.mf.client.util.ChecksumUtils;
 import vicnode.mf.client.util.PathUtils;
@@ -51,7 +52,8 @@ public class Result {
             _file = null;
         }
         if (_file != null && !noCsumCheck) {
-            _fileChecksum = calculateCRC32(_file);
+            long csum = calculateCRC32(_file);
+            _fileChecksum = csum == 0 ? null : csum;
         }
     }
 
@@ -63,7 +65,8 @@ public class Result {
 
         _file = file;
         if (!noCsumCheck) {
-            _fileChecksum = calculateCRC32(_file);
+            long csum = calculateCRC32(_file);
+            _fileChecksum = csum == 0 ? null : csum;
         }
         _relativePath = PathUtils.extractRelativePath(file, baseDirectory);
         _assetPath = PathUtils.joinPaths(_baseNamespace, _relativePath);
@@ -158,12 +161,9 @@ public class Result {
     }
 
     public boolean checksumMatch() {
-        if (sizeMatch() && _fileChecksum != null
-                && _assetContentChecksum != null) {
-            return _fileChecksum.longValue() == _assetContentChecksum
-                    .longValue();
-        }
-        return false;
+
+        return sizeMatch()
+                && ObjectUtil.equals(_fileChecksum, _assetContentChecksum);
     }
 
     public boolean match() {
@@ -179,8 +179,11 @@ public class Result {
         sb.append("\"").append(_assetPath).append("\",");
         sb.append(_assetContentSize).append(",");
         if (!_noCsumCheck) {
-            sb.append(_assetContentChecksum == null ? null
-                    : Long.toHexString(_assetContentChecksum.longValue()))
+            sb.append(
+                    _assetContentChecksum == null ? null
+                            : Long.toHexString(
+                                    _assetContentChecksum.longValue())
+                                    .toUpperCase())
                     .append(",");
         }
         sb.append("\"").append(filePath()).append("\",");
@@ -190,9 +193,9 @@ public class Result {
                     : Long.toHexString(_fileChecksum.longValue()).toUpperCase())
                     .append(",");
         }
-        sb.append(sizeMatch() ? "Y" : "N").append(",");
+        sb.append(sizeMatch()).append(",");
         if (!_noCsumCheck) {
-            sb.append(checksumMatch() ? "Y" : "N").append(",");
+            sb.append(checksumMatch()).append(",");
         }
         out.println(sb.toString());
     }
