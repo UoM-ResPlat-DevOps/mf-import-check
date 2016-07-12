@@ -6,11 +6,20 @@ public class PathUtils {
 
     public static final String SEPARATOR = "/";
 
+    public static String toUnixPath(String path) {
+        if (path == null) {
+            return null;
+        }
+        return path.replace("\\\\", "/").replace("\\", "/");
+    }
+
     public static String extractRelativePath(String fullPath,
             String baseDirPath) {
         if (fullPath == null || baseDirPath == null) {
-            return fullPath;
+            return toUnixPath(fullPath);
         }
+        fullPath = toUnixPath(fullPath);
+        baseDirPath = toUnixPath(baseDirPath);
         if (fullPath.startsWith(baseDirPath)) {
             String relativePath = StringUtils.trimLeft(fullPath, baseDirPath);
             while (relativePath.startsWith(SEPARATOR)) {
@@ -23,11 +32,13 @@ public class PathUtils {
 
     public static String joinPaths(String path1, String path2) {
         if (path1 == null) {
-            return path2;
+            return toUnixPath(path2);
         }
         if (path2 == null) {
-            return path1;
+            return toUnixPath(path1);
         }
+        path1 = toUnixPath(path1);
+        path2 = toUnixPath(path2);
         StringBuilder sb = new StringBuilder();
         sb.append(StringUtils.trimRight(path1, SEPARATOR));
         sb.append(SEPARATOR);
