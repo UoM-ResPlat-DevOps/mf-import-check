@@ -51,4 +51,49 @@ public class PathUtils {
                 baseDirectory.getAbsolutePath());
     }
 
+    public static String extractFileName(String path) {
+        if (path == null) {
+            return null;
+        }
+        if (path.endsWith("/")) {
+            return null;
+        }
+        return lastComponentOf(path);
+    }
+
+    public static String extractParentDirectoryPath(String path) {
+        if (path == null || path.isEmpty()) {
+            return null;
+        }
+        path = trimTrailingSlash(path);
+        int idx = path.lastIndexOf('/');
+        if (idx < 0) {
+            return null;
+        } else if (idx == 0) {
+            return path.substring(0, 1);
+        } else {
+            return path.substring(0, idx);
+        }
+    }
+
+    public static String lastComponentOf(String path) {
+        path = trimTrailingSlash(path);
+        int idx = path.lastIndexOf('/');
+        if (idx < 0) {
+            return path;
+        } else {
+            return path.substring(idx + 1);
+        }
+    }
+
+    public static String trimTrailingSlash(String path) {
+        if (path == null || path.isEmpty()) {
+            return path;
+        }
+        while (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        return path;
+    }
+
 }

@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import arc.mf.client.ServerClient.Connection;
 import arc.utils.ObjectUtil;
 import arc.xml.XmlDoc;
+import arc.xml.XmlStringWriter;
 import vicnode.mf.client.util.ChecksumUtils;
 import vicnode.mf.client.util.PathUtils;
 
@@ -70,9 +71,13 @@ public class Result {
         }
         _relativePath = PathUtils.extractRelativePath(file, baseDirectory);
         _assetPath = PathUtils.joinPaths(_baseNamespace, _relativePath);
+        String namespace = PathUtils.extractParentDirectoryPath(_assetPath);
+        String name = PathUtils.extractFileName(_assetPath);
 
-        XmlDoc.Element ae = cxn.execute("asset.get",
-                "<id>path=" + _assetPath + "</id>", null, null)
+        XmlStringWriter w = new XmlStringWriter();
+        w.add("where", "namespace='" + namespace + "' and name='" + name + "'");
+        w.add("action", "get-meta");
+        XmlDoc.Element ae = cxn.execute("asset.query", w.document(), null, null)
                 .element("asset");
         if (ae != null) {
             _assetId = ae.value("@id");
@@ -88,7 +93,7 @@ public class Result {
 
     private static long calculateCRC32(File file) throws Throwable {
         System.out.print("Thread " + Thread.currentThread().getId()
-                + ": Calculating CRC32 checksum for file: \""
+                + ": calculating CRC32 checksum for file: \""
                 + file.getAbsolutePath() + "\"...");
         long csum = ChecksumUtils.crc32(file);
         return csum;
@@ -196,6 +201,25 @@ public class Result {
         sb.append(sizeMatch()).append(",");
         if (!_noCsumCheck) {
             sb.append(checksumMatch()).append(",");
+        }
+        out.println(sb.toString());
+    }
+
+    public static void printHeader(PrintStream out, boolean noCsumCheck) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Asset path,");
+        sb.append("Asset content size,");
+        if (!noCsumCheck) {
+            sb.append("Asset content checksum (CRC32),");
+        }
+        sb.append("File path,");
+        sb.append("File size,");
+        if (!noCsumCheck) {
+            sb.append("File checksum (CRC32),");
+        }
+        sb.append("Sizes match,");
+        if (!noCsumCheck) {
+            sb.append("Checksums match,");
         }
         out.println(sb.toString());
     }

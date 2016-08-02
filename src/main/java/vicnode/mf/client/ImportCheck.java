@@ -232,7 +232,12 @@ public class ImportCheck {
             ServerClient.Connection cxn = server.open();
             final PrintStream out = new PrintStream(new BufferedOutputStream(
                     new FileOutputStream(outputFile, false)));
+            
             try {
+                /*
+                 * Print result csv header line.
+                 */
+                Result.printHeader(out, noCsumCheck);
                 if (auth != null) {
                     String[] parts = auth.split(",");
                     if (parts.length != 3) {
