@@ -1,0 +1,38 @@
+0. Is a Java application so make sure Java is installed
+1. Unpack the zip file
+2. Deploy the unpacked parent directory somewhere and put in your path
+3. Enter mf-import-check  <RET> to see the usage arguments.    FOr example:
+
+% ~/bin/mflux/mf-import-check-0.0.5/mf-import-check 
+Error: missing arguments.
+Usage: mf-import-check <options> <namespace> <directory>
+Options:
+    --mf.host <host>                    Mediaflux server host.
+    --mf.port <port>                    Mediaflux server port.
+    --mf.transport <http|https|tcp/ip>  Mediaflux server transport. Can be http, https or tcp/ip.
+    --mf.auth <domain,user,password>    Mediaflux user credentials. In the comma separated form of domain,user,password
+    --mf.token <token>                  Mediaflux secure identity token.
+    --local-remote                      If specified, check from local directory to remote mediaflux namespace. Otherwise, check from remote mediaflux namespace to local directory.
+    --max-threads <number-of-threads>   Maximum number of threads. Defaults to 1.
+    --no-csum-check                     Do not compare (crc32) checksums.
+    --output <file>                     Output file in CSV format.
+
+
+
+
+
+Example:
+
+% ~/bin/mflux/mf-import-check-0.0.5/mf-import-check --local-remote --mf.host mediaflux.vicnode.org.au --mf.port 443 --mf.transport https --mf.auth <domain>,<user>,<password>  --output /Users/nebk/compare.csv  projects/proj-test-1128.4.8/Test_Upload /Users/nebk/Test_Upload
+
+
+Notes: 
+
+<domain> is the MF domain you authenticate with
+<user> is your  MF username
+<password> is your  MF password
+--local-remote   means compare the local file system (the source of truth) to the  Mediaflux.  Leaving it out is the opposite comparison.
+You must give the full path of the Mediaflux namespace.   VicNode projects are of the form projects/proj-<name>-<CID>
+
+
+
