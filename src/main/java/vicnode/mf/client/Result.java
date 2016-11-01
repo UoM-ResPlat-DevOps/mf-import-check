@@ -1,7 +1,10 @@
 package vicnode.mf.client;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.logging.Logger;
 
 import arc.mf.client.ServerClient.Connection;
 import arc.utils.ObjectUtil;
@@ -181,6 +184,18 @@ public class Result {
 
     public void println(PrintStream out) {
         StringBuilder sb = new StringBuilder();
+        save(sb, false);
+        out.println(sb.toString());
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        save(sb, false);
+        return sb.toString();
+    }
+
+    protected void save(StringBuilder sb, boolean newLine) {
         sb.append("\"").append(_assetPath).append("\",");
         sb.append(_assetContentSize).append(",");
         if (!_noCsumCheck) {
@@ -202,11 +217,18 @@ public class Result {
         if (!_noCsumCheck) {
             sb.append(checksumMatch()).append(",");
         }
-        out.println(sb.toString());
+        if (newLine) {
+            sb.append("\n");
+        }
     }
 
-    public static void printHeader(PrintStream out, boolean noCsumCheck) {
+    public void log(Logger log) {
         StringBuilder sb = new StringBuilder();
+        save(sb, true);
+        log.info(sb.toString());
+    }
+
+    private static void saveHeader(StringBuilder sb, boolean noCsumCheck) {
         sb.append("Asset path,");
         sb.append("Asset content size,");
         if (!noCsumCheck) {
@@ -221,6 +243,22 @@ public class Result {
         if (!noCsumCheck) {
             sb.append("Checksums match,");
         }
+    }
+
+    public static void printHeader(PrintStream out, boolean noCsumCheck) {
+        StringBuilder sb = new StringBuilder();
+        saveHeader(sb, noCsumCheck);
         out.println(sb.toString());
+    }
+
+    public static void printHeader(File out, boolean noCsumCheck)
+            throws Throwable {
+        PrintStream ps = new PrintStream(
+                new BufferedOutputStream(new FileOutputStream(out)));
+        try {
+            printHeader(ps, noCsumCheck);
+        } finally {
+            ps.close();
+        }
     }
 }

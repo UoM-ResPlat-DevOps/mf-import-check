@@ -1,8 +1,6 @@
 package vicnode.mf.client;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.FileVisitResult;
@@ -14,6 +12,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import arc.mf.client.RemoteServer;
 import arc.mf.client.ServerClient;
@@ -230,14 +233,18 @@ public class ImportCheck {
             RemoteServer server = new RemoteServer(host, port, useHttp,
                     encrypt);
             ServerClient.Connection cxn = server.open();
-            final PrintStream out = new PrintStream(new BufferedOutputStream(
-                    new FileOutputStream(outputFile, false)));
+
+            /*
+             * Print result csv header line.
+             */
+            Result.printHeader(outputFile, noCsumCheck);
             
+            /*
+             * Create result csv logger.
+             */
+            final Logger logger = createLogger(outputFile);
             try {
-                /*
-                 * Print result csv header line.
-                 */
-                Result.printHeader(out, noCsumCheck);
+
                 if (auth != null) {
                     String[] parts = auth.split(",");
                     if (parts.length != 3) {
@@ -258,7 +265,7 @@ public class ImportCheck {
                 ResultHandler rh = new ResultHandler() {
                     @Override
                     public void checked(Result result) {
-                        result.println(out);
+                        result.log(logger);
                     }
                 };
                 if (localRemote) {
@@ -270,7 +277,6 @@ public class ImportCheck {
                 }
             } finally {
                 cxn.close();
-                out.close();
             }
         } catch (Throwable e) {
             e.printStackTrace(System.err);
@@ -396,6 +402,22 @@ public class ImportCheck {
             }
         }
         return port;
+    }
+
+    private static Logger createLogger(File outputFile) throws Throwable {
+        Logger logger = Logger.getLogger(ImportCheck.class.getName());
+        FileHandler fh = new FileHandler(outputFile.getAbsolutePath(),
+                1000000000, 1, true);
+        fh.setFormatter(new Formatter() {
+
+            @Override
+            public String format(LogRecord record) {
+                return record.getMessage();
+            }
+        });
+        logger.setLevel(Level.ALL);
+        logger.addHandler(fh);
+        return logger;
     }
 
     private static void printUsage(PrintStream ps) {
