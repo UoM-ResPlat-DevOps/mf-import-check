@@ -238,7 +238,7 @@ public class ImportCheck {
              * Print result csv header line.
              */
             Result.printHeader(outputFile, noCsumCheck);
-            
+
             /*
              * Create result csv logger.
              */
@@ -382,6 +382,13 @@ public class ImportCheck {
                             }
                         });
                         return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFileFailed(Path path,
+                            IOException ioe) {
+                        ioe.printStackTrace(System.err);
+                        return FileVisitResult.SKIP_SUBTREE;
                     }
                 });
         executor.shutdown();

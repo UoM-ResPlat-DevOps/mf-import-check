@@ -74,13 +74,10 @@ public class Result {
         }
         _relativePath = PathUtils.extractRelativePath(file, baseDirectory);
         _assetPath = PathUtils.joinPaths(_baseNamespace, _relativePath);
-        String namespace = PathUtils.extractParentDirectoryPath(_assetPath);
-        String name = PathUtils.extractFileName(_assetPath);
 
         XmlStringWriter w = new XmlStringWriter();
-        w.add("where", "namespace='" + namespace + "' and name='" + name + "'");
-        w.add("action", "get-meta");
-        XmlDoc.Element ae = cxn.execute("asset.query", w.document(), null, null)
+        w.add("id", "path=" + _assetPath);
+        XmlDoc.Element ae = cxn.execute("asset.get", w.document(), null, null)
                 .element("asset");
         if (ae != null) {
             _assetId = ae.value("@id");
