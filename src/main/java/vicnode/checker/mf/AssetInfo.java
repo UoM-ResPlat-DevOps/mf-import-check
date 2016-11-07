@@ -1,9 +1,11 @@
-package vicnode.mf.client.checker;
+package vicnode.checker.mf;
 
 import arc.mf.client.ServerClient;
 import arc.xml.XmlDoc;
 import arc.xml.XmlStringWriter;
-import vicnode.mf.client.util.PathUtils;
+import vicnode.checker.AbsoluteObjectInfo;
+import vicnode.checker.Checksum;
+import vicnode.checker.util.PathUtils;
 
 public class AssetInfo extends AbsoluteObjectInfo {
 

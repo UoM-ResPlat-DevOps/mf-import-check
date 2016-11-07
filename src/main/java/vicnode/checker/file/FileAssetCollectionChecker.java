@@ -1,4 +1,4 @@
-package vicnode.mf.client.checker;
+package vicnode.checker.file;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +11,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.concurrent.ExecutorService;
 
 import arc.mf.client.ServerClient;
+import vicnode.checker.AbstractCollectionChecker;
+import vicnode.checker.ResultHandler;
+import vicnode.checker.mf.AssetInfo;
 
 public class FileAssetCollectionChecker
         extends AbstractCollectionChecker<FileInfo, AssetInfo> {

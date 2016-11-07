@@ -1,8 +1,10 @@
-package vicnode.mf.client.checker;
+package vicnode.checker.file;
 
 import java.io.File;
 
-import vicnode.mf.client.util.ChecksumUtils;
+import vicnode.checker.AbsoluteObjectInfo;
+import vicnode.checker.Checksum;
+import vicnode.checker.util.ChecksumUtils;
 
 public class FileInfo extends AbsoluteObjectInfo {
 

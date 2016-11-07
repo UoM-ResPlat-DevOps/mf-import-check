@@ -1,17 +1,9 @@
-package vicnode.mf.client;
+package vicnode.checker.cli;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -21,11 +13,15 @@ import java.util.logging.Logger;
 
 import arc.mf.client.RemoteServer;
 import arc.mf.client.ServerClient;
-import arc.mf.client.ServerClient.Connection;
-import arc.xml.XmlDoc;
-import arc.xml.XmlStringWriter;
+import vicnode.checker.Result;
+import vicnode.checker.ResultHandler;
+import vicnode.checker.ResultSummary;
+import vicnode.checker.file.FileAssetCollectionChecker;
+import vicnode.checker.file.FileInfo;
+import vicnode.checker.mf.AssetFileCollectionChecker;
+import vicnode.checker.mf.AssetInfo;
 
-public class ImportCheck {
+public class MFImportCheck {
 
     public static final String PROG = "mf-import-check";
 
@@ -42,12 +38,14 @@ public class ImportCheck {
         String transport = null;
         String auth = null;
         String token = null;
-        Boolean localRemote = null;
+        boolean localRemote = false;
         Integer maxThreads = null;
-        Boolean noCsumCheck = null;
-        File outputFile = null;
+        boolean noCsumCheck = false;
+        File outputCSVFile = null;
+        File outputSummaryFile = null;
         String namespace = args[args.length - 2];
         File directory = new File(args[args.length - 1]);
+        boolean quiet = false;
 
         try {
             if (!directory.exists()) {
@@ -107,10 +105,6 @@ public class ImportCheck {
                     token = args[i + 1];
                     i += 2;
                 } else if (args[i].equals("--local-remote")) {
-                    if (localRemote != null) {
-                        throw new IllegalArgumentException(
-                                "Expects only one --local-remote argument.");
-                    }
                     localRemote = true;
                     i++;
                 } else if (args[i].equals("--max-threads")) {
@@ -128,30 +122,35 @@ public class ImportCheck {
                     }
                     i += 2;
                 } else if (args[i].equals("--no-csum-check")) {
-                    if (noCsumCheck != null) {
-                        throw new IllegalArgumentException(
-                                "Expects only one --no-csum-check argument.");
-                    }
                     noCsumCheck = true;
                     i++;
                 } else if (args[i].equals("--output")) {
-                    if (outputFile != null) {
+                    if (outputCSVFile != null) {
                         throw new IllegalArgumentException(
                                 "Expects only one --output argument.");
                     }
-                    outputFile = new File(args[i + 1]);
-                    if (outputFile.exists()) {
-                        throw new IllegalArgumentException("Output file: \""
-                                + args[i + 1] + "\" already exists.");
+                    String timestamp = new SimpleDateFormat("yyyyMMddHHmmssSSS")
+                            .format(new Date());
+                    outputCSVFile = new File(generateOutputFilePath(args[i + 1],
+                            timestamp, ".csv"));
+                    outputSummaryFile = new File(generateOutputFilePath(
+                            args[i + 1], timestamp, ".summary.txt"));
+                    if (outputCSVFile.exists()) {
+                        throw new IllegalArgumentException("Output CSV file: \""
+                                + outputCSVFile.getAbsolutePath()
+                                + "\" already exists.");
                     }
                     i += 2;
+                } else if (args[i].equals("--quiet")) {
+                    quiet = true;
+                    i++;
                 } else {
                     throw new IllegalArgumentException(
                             "Unexpected argument: " + args[i]);
                 }
             }
 
-            if (outputFile == null) {
+            if (outputCSVFile == null) {
                 throw new IllegalArgumentException(
                         "Missing --output argument.");
             }
@@ -219,14 +218,6 @@ public class ImportCheck {
                         "Missing --mf.transport argument or --mf.token argument.");
             }
 
-            if (localRemote == null) {
-                localRemote = false;
-            }
-
-            if (noCsumCheck == null) {
-                noCsumCheck = false;
-            }
-
             if (maxThreads == null) {
                 maxThreads = 1;
             }
@@ -238,12 +229,12 @@ public class ImportCheck {
             /*
              * Print result csv header line.
              */
-            Result.printHeader(outputFile, noCsumCheck);
+            Result.writeCSVHeader("asset", "file", outputCSVFile, noCsumCheck);
 
             /*
              * Create result csv logger.
              */
-            final Logger logger = createLogger(outputFile);
+            final Logger csvLogger = createLogger(outputCSVFile);
             try {
 
                 if (auth != null) {
@@ -263,21 +254,64 @@ public class ImportCheck {
                     throw new IllegalArgumentException(
                             "Namespace \"" + namespace + "\" does not exist.");
                 }
-                ResultHandler rh = new ResultHandler() {
-                    @Override
-                    public void checked(Result result) {
-                        result.log(logger);
-                    }
-                };
+                final boolean csumCheck = !noCsumCheck;
+                final boolean verbose = !quiet;
+                ResultSummary summary = new ResultSummary();
                 if (localRemote) {
-                    check(cxn, directory, namespace, maxThreads, noCsumCheck,
-                            rh);
+                    ResultHandler<FileInfo, AssetInfo> rh = new ResultHandler<FileInfo, AssetInfo>() {
+                        @Override
+                        public void checked(
+                                Result<FileInfo, AssetInfo> result) {
+                            result.logCSV(csvLogger, !csumCheck);
+                        }
+
+                        @Override
+                        public void checking(FileInfo object1,
+                                AssetInfo object2) {
+                            if (verbose) {
+                                long threadId = Thread.currentThread().getId();
+                                System.out.println("Thread " + threadId
+                                        + ": checking asset: \""
+                                        + object2.relativePath() + "\"...");
+                            }
+                        }
+                    };
+                    summary = new FileAssetCollectionChecker(cxn, namespace,
+                            directory, csumCheck, rh, maxThreads).execute();
+                    // @formatter:off
+                    summary.appendToHeader("                    local directory: " + directory.getAbsolutePath());
+                    summary.appendToHeader("          Mediaflux asset namespace: " + namespace);
+                    // @formatter:on
                 } else {
-                    check(cxn, namespace, directory, maxThreads, noCsumCheck,
-                            rh);
+                    ResultHandler<AssetInfo, FileInfo> rh = new ResultHandler<AssetInfo, FileInfo>() {
+                        @Override
+                        public void checked(
+                                Result<AssetInfo, FileInfo> result) {
+                            result.logCSV(csvLogger, !csumCheck);
+                        }
+
+                        @Override
+                        public void checking(AssetInfo object1,
+                                FileInfo object2) {
+                            if (verbose) {
+                                long threadId = Thread.currentThread().getId();
+                                System.out.println("Thread " + threadId
+                                        + ": checking file: \""
+                                        + object2.relativePath() + "\"...");
+                            }
+                        }
+                    };
+                    summary = new AssetFileCollectionChecker(cxn, namespace,
+                            directory, csumCheck, rh, maxThreads).execute();
+                    // @formatter:off
+                    summary.appendToHeader("          Mediaflux asset namespace: " + namespace);
+                    summary.appendToHeader("                    local directory: " + directory.getAbsolutePath());
+                    // @formatter:on
                 }
+                summary.save(outputSummaryFile);
+                summary.print(System.out);
             } finally {
-                closeLogHandlers(logger);
+                closeLogHandlers(csvLogger);
                 cxn.close();
             }
         } catch (Throwable e) {
@@ -289,113 +323,23 @@ public class ImportCheck {
         }
     }
 
-    private static void check(Connection cxn, final String namespace,
-            final File directory, int maxThreads, final boolean noCsumCheck,
-            final ResultHandler rh) throws Throwable {
-        final ExecutorService executor = Executors
-                .newFixedThreadPool(maxThreads);
-        int idx = 1;
-        int size = PAGE_SIZE;
-        while (true) {
-            XmlStringWriter w = new XmlStringWriter();
-            w.add("idx", idx);
-            w.add("size", size);
-            w.add("action", "get-value");
-            w.add("where", "namespace>='" + namespace + "'");
-            w.add("xpath", new String[] { "ename", "namespace" }, "namespace");
-            w.add("xpath", new String[] { "ename", "name" }, "name");
-            w.add("xpath", new String[] { "ename", "size" }, "content/size");
-            w.add("xpath", new String[] { "ename", "csum" }, "content/csum");
-            XmlDoc.Element re = cxn.execute("asset.query", w.document(), null,
-                    null);
-            boolean complete = re.booleanValue("cursor/total/@complete");
-            if (re.elementExists("asset")) {
-                List<XmlDoc.Element> aes = re.elements("asset");
-                for (final XmlDoc.Element ae : aes) {
-                    executor.execute(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            try {
-                                String assetId = ae.value("@id");
-                                String assetNamespace = ae.value("namespace");
-                                String assetName = ae.value("name");
-                                String assetPath = assetNamespace + "/"
-                                        + (assetName == null
-                                                ? ("__asset_id__" + assetId)
-                                                : assetName);
-                                System.out.println("Thread "
-                                        + Thread.currentThread().getId()
-                                        + ": checking asset \"" + assetPath
-                                        + "\"...");
-                                Result result = new Result(ae, namespace,
-                                        directory, noCsumCheck);
-                                if (rh != null) {
-                                    rh.checked(result);
-                                }
-                            } catch (Throwable e) {
-                                e.printStackTrace(System.err);
-                            }
-                        }
-                    });
-
-                }
-            }
-            if (complete) {
-                break;
+    private static String generateOutputFilePath(String path, String timestamp,
+            String extension) {
+        String name = path;
+        if (path.toLowerCase().endsWith(".csv")
+                || path.toLowerCase().endsWith(".txt")) {
+            name = name.substring(0, path.length() - 4);
+        }
+        StringBuilder sb = new StringBuilder(name);
+        sb.append(".").append(timestamp);
+        if (extension != null) {
+            if (extension.startsWith(".")) {
+                sb.append(extension);
             } else {
-                idx += size;
+                sb.append(".").append(extension);
             }
         }
-        executor.shutdown();
-        while (!executor.isTerminated()) {
-
-        }
-    }
-
-    private static void check(final Connection cxn, final File directory,
-            final String namespace, int maxThreads, final boolean noCsumCheck,
-            final ResultHandler rh) throws Throwable {
-        final ExecutorService executor = Executors
-                .newFixedThreadPool(maxThreads);
-        Files.walkFileTree(Paths.get(directory.getAbsolutePath()),
-                new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(Path filePath,
-                            BasicFileAttributes attrs) throws IOException {
-                        final File file = filePath.toFile();
-                        executor.execute(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                System.out.println("Thread "
-                                        + Thread.currentThread().getId()
-                                        + ": checking file \""
-                                        + file.getAbsolutePath() + "\"...");
-                                try {
-                                    Result result = new Result(file, cxn,
-                                            directory, namespace, noCsumCheck);
-                                    if (rh != null) {
-                                        rh.checked(result);
-                                    }
-                                } catch (Throwable e) {
-                                    e.printStackTrace(System.err);
-                                }
-                            }
-                        });
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    @Override
-                    public FileVisitResult visitFileFailed(Path path,
-                            IOException ioe) {
-                        ioe.printStackTrace(System.err);
-                        return FileVisitResult.SKIP_SUBTREE;
-                    }
-                });
-        executor.shutdown();
-        while (!executor.isTerminated()) {
-        }
+        return sb.toString();
     }
 
     private static Integer parsePort(String portStr) throws Throwable {
@@ -414,7 +358,7 @@ public class ImportCheck {
     }
 
     private static Logger createLogger(File outputFile) throws Throwable {
-        Logger logger = Logger.getLogger(ImportCheck.class.getName());
+        Logger logger = Logger.getLogger(MFImportCheck.class.getName());
         FileHandler fh = new FileHandler(outputFile.getAbsolutePath(),
                 1000000000, 1, true);
         fh.setFormatter(new Formatter() {
@@ -456,6 +400,8 @@ public class ImportCheck {
                 "    --no-csum-check                     Do not compare (crc32) checksums.");
         ps.println(
                 "    --output <file>                     Output file in CSV format.");
+        ps.println(
+                "    --quiet                             If specified, no progress message is printed to stdout.");
 
     }
 

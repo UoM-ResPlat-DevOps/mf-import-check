@@ -1,8 +1,13 @@
-package vicnode.mf.client.checker;
+package vicnode.checker.mf;
 
 import java.io.File;
 
-import vicnode.mf.client.util.PathUtils;
+import vicnode.checker.AbstractObjectChecker;
+import vicnode.checker.Checksum;
+import vicnode.checker.Result;
+import vicnode.checker.ResultHandler;
+import vicnode.checker.file.FileInfo;
+import vicnode.checker.util.PathUtils;
 
 public class AssetFileChecker
         extends AbstractObjectChecker<AssetInfo, FileInfo> {

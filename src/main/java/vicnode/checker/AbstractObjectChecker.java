@@ -1,4 +1,4 @@
-package vicnode.mf.client.checker;
+package vicnode.checker;
 
 public abstract class AbstractObjectChecker<A extends ObjectInfo, B extends ObjectInfo>
         implements ObjectChecker<A, B> {

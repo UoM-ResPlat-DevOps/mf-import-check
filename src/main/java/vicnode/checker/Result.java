@@ -1,4 +1,4 @@
-package vicnode.mf.client.checker;
+package vicnode.checker;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

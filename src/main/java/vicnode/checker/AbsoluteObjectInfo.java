@@ -1,7 +1,7 @@
-package vicnode.mf.client.checker;
+package vicnode.checker;
 
-import vicnode.mf.client.util.ObjectUtils;
-import vicnode.mf.client.util.PathUtils;
+import vicnode.checker.util.ObjectUtils;
+import vicnode.checker.util.PathUtils;
 
 public abstract class AbsoluteObjectInfo implements ObjectInfo {
 

@@ -1,4 +1,4 @@
-package vicnode.mf.client.checker;
+package vicnode.checker.mf;
 
 import java.io.File;
 import java.util.List;
@@ -7,6 +7,10 @@ import java.util.concurrent.ExecutorService;
 import arc.mf.client.ServerClient;
 import arc.xml.XmlDoc;
 import arc.xml.XmlStringWriter;
+import vicnode.checker.AbstractCollectionChecker;
+import vicnode.checker.Checksum;
+import vicnode.checker.ResultHandler;
+import vicnode.checker.file.FileInfo;
 
 public class AssetFileCollectionChecker
         extends AbstractCollectionChecker<AssetInfo, FileInfo> {

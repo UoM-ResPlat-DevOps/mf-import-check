@@ -1,10 +1,12 @@
-package vicnode.mf.client.checker;
+package vicnode.checker;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ResultSummary {
 
@@ -16,6 +18,9 @@ public class ResultSummary {
     private long _totalMissing = 0;
     private long _totalSizeDiffer = 0;
     private long _totalCsumDiffer = 0;
+
+    private List<String> _header;
+    private List<String> _footer;
 
     public ResultSummary() {
 
@@ -89,6 +94,11 @@ public class ResultSummary {
     }
 
     public void print(PrintStream w) {
+        if (_header != null) {
+            for (String line : _header) {
+                w.println(line);
+            }
+        }
         // @formatter:off
         w.println("  total number of processed objects: " + totalProcessed());
         w.println("total size of the processed objects: " + totalProcessedSize());
@@ -99,5 +109,24 @@ public class ResultSummary {
         w.println("    number of size-mismatch objects: " + totalSizeDiffer());
         w.println("number of checksum-mismatch objects: " + totalCsumDiffer());
         // @formatter:on
+        if (_footer != null) {
+            for (String line : _footer) {
+                w.println(line);
+            }
+        }
+    }
+
+    public void appendToHeader(String line) {
+        if (_header == null) {
+            _header = new ArrayList<String>();
+        }
+        _header.add(line);
+    }
+
+    public void appendToFooter(String line) {
+        if (_footer == null) {
+            _footer = new ArrayList<String>();
+        }
+        _footer.add(line);
     }
 }

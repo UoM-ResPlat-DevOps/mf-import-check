@@ -1,4 +1,4 @@
-package vicnode.mf.client.util;
+package vicnode.checker.util;
 
 import java.io.File;
 

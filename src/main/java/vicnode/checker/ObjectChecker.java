@@ -1,4 +1,4 @@
-package vicnode.mf.client.checker;
+package vicnode.checker;
 
 public interface ObjectChecker<A extends ObjectInfo, B extends ObjectInfo>
         extends Runnable {

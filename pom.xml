@@ -4,7 +4,7 @@
 
 	<groupId>vicnode</groupId>
 	<artifactId>mf-import-check</artifactId>
-	<version>0.0.6</version>
+	<version>0.0.7</version>
 	<packaging>jar</packaging>
 
 	<name>mf-import-check</name>
@@ -48,7 +48,7 @@
 							</descriptorRefs>
 							<archive>
 								<manifest>
-									<mainClass>vicnode.mf.client.ImportCheck</mainClass>
+									<mainClass>vicnode.checker.cli.MFImportCheck</mainClass>
 								</manifest>
 								<manifestEntries>
 									<App-Version>${project.version}</App-Version>
