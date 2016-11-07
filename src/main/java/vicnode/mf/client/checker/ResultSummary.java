@@ -1,5 +1,11 @@
 package vicnode.mf.client.checker;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+
 public class ResultSummary {
 
     private long _totalProcessed = 0;
@@ -49,10 +55,15 @@ public class ResultSummary {
 
     public synchronized void add(Result<?, ?> r) {
         _totalProcessed++;
-        _totalSizeProcessed += r.object1().size();
+        long csize = r.object1().size() == null ? 0 : r.object1().size();
+        if (csize > 0) {
+            _totalSizeProcessed += r.object1().size();
+        }
         if (r.allMatch()) {
             _totalPassed++;
-            _totalSizePassed += r.object1().size();
+            if (csize > 0) {
+                _totalSizePassed += csize;
+            }
         } else {
             _totalFailed++;
             if (!r.bothExist()) {
@@ -65,5 +76,28 @@ public class ResultSummary {
                 _totalCsumDiffer++;
             }
         }
+    }
+
+    public void save(File outputSummaryFile) throws IOException {
+        PrintStream ps = new PrintStream(new BufferedOutputStream(
+                new FileOutputStream(outputSummaryFile)));
+        try {
+            print(ps);
+        } finally {
+            ps.close();
+        }
+    }
+
+    public void print(PrintStream w) {
+        // @formatter:off
+        w.println("  total number of processed objects: " + totalProcessed());
+        w.println("total size of the processed objects: " + totalProcessedSize());
+        w.println("     total number of passed objects: " + totalPassed());
+        w.println("       total size of passed objects: " + totalPassedSize());
+        w.println("     total number of failed objects: " + totalFailed());
+        w.println("          number of missing objects: " + totalMissing());
+        w.println("    number of size-mismatch objects: " + totalSizeDiffer());
+        w.println("number of checksum-mismatch objects: " + totalCsumDiffer());
+        // @formatter:on
     }
 }

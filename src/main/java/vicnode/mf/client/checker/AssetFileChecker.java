@@ -2,7 +2,6 @@ package vicnode.mf.client.checker;
 
 import java.io.File;
 
-import arc.xml.XmlDoc;
 import vicnode.mf.client.util.PathUtils;
 
 public class AssetFileChecker
@@ -16,6 +15,7 @@ public class AssetFileChecker
     @Override
     public void check(AssetInfo object1, FileInfo object2, boolean csumCheck,
             ResultHandler<AssetInfo, FileInfo> rh) {
+        rh.checking(object1, object2);
         /*
          * calculate crc32 checksum
          */
@@ -36,9 +36,11 @@ public class AssetFileChecker
     }
 
     public static AssetFileChecker create(String baseNamespace, File baseDir,
-            XmlDoc.Element ae, boolean csumCheck,
-            ResultHandler<AssetInfo, FileInfo> rh) throws Throwable {
-        AssetInfo asset = new AssetInfo(baseNamespace, ae);
+            String assetId, String assetNamespace, String assetName, Long size,
+            Checksum csum, boolean csumCheck,
+            ResultHandler<AssetInfo, FileInfo> rh) {
+        AssetInfo asset = new AssetInfo(baseNamespace, assetId, assetNamespace,
+                assetName, size, csum);
         FileInfo file = new FileInfo(baseDir, new File(PathUtils
                 .joinPaths(baseDir.getAbsolutePath(), asset.relativePath())));
         return new AssetFileChecker(asset, file, csumCheck, rh);

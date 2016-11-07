@@ -14,9 +14,16 @@ public class AssetInfo extends AbsoluteObjectInfo {
     private String _assetPath;
     private Long _csize;
 
-    public AssetInfo(String baseNamespace, XmlDoc.Element ae) throws Throwable {
+    public AssetInfo(String baseNamespace, String assetId,
+            String assetNamespace, String assetName, Long size, Checksum csum) {
         _baseNamespace = baseNamespace;
-        update(ae);
+        _assetId = assetId;
+        _assetNamespace = assetNamespace;
+        _assetName = assetName;
+        _assetPath = PathUtils.joinPaths(assetNamespace,
+                assetName == null ? ("__asset_id__" + assetId) : assetName);
+        _csize = size;
+        setChecksum(csum);
     }
 
     public AssetInfo(String baseNamespace, String assetPath) {
@@ -86,10 +93,10 @@ public class AssetInfo extends AbsoluteObjectInfo {
         if (_assetNamespace == null) {
             _assetNamespace = ae.value("namespace");
         }
-        if (_assetName != null) {
+        if (_assetName == null) {
             _assetName = ae.value("name");
         }
-        if (_assetPath != null) {
+        if (_assetPath == null) {
             _assetPath = _assetNamespace + "/" + (_assetName == null
                     ? ("__asset_id__" + _assetId) : _assetName);
         }
@@ -98,10 +105,10 @@ public class AssetInfo extends AbsoluteObjectInfo {
         } else {
             _csize = null;
         }
-        if (ae.elementExists("csum[@base='16']")) {
+        if (ae.elementExists("content/csum[@base='16']")) {
             setChecksum(new Checksum(Checksum.Type.CRC32,
-                    ae.value("csum[@base='16']"), 16));
-        } else if (ae.elementExists("csum[@base='10']")) {
+                    ae.value("content/csum[@base='16']"), 16));
+        } else if (ae.elementExists("content/csum[@base='10']")) {
             setChecksum(new Checksum(Checksum.Type.CRC32,
                     ae.longValue("csum[@base='10']")));
         } else {

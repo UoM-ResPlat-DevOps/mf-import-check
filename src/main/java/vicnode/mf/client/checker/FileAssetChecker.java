@@ -21,7 +21,9 @@ public class FileAssetChecker
     @Override
     public void check(FileInfo object1, AssetInfo object2, boolean csumCheck,
             ResultHandler<FileInfo, AssetInfo> rh) {
+        rh.checking(object1, object2);
         try {
+            object1.setCRC32();
             object2.updateMetadata(_cxn);
         } catch (Throwable e) {
             e.printStackTrace(System.err);

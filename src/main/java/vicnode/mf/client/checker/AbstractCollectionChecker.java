@@ -44,6 +44,11 @@ public abstract class AbstractCollectionChecker<A extends ObjectInfo, B extends 
                 rs.add(result);
                 resultHandler().checked(result);
             }
+
+            @Override
+            public void checking(A object1, B object2) {
+                resultHandler().checking(object1, object2);
+            }
         });
         executor.shutdown();
         while (!executor.isTerminated()) {

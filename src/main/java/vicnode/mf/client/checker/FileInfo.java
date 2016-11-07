@@ -8,6 +8,7 @@ public class FileInfo extends AbsoluteObjectInfo {
 
     private File _baseDir;
     private File _file;
+    private Long _csize = null;
 
     public FileInfo(File baseDir, File file) {
         _baseDir = baseDir;
@@ -21,7 +22,12 @@ public class FileInfo extends AbsoluteObjectInfo {
 
     @Override
     public Long size() {
-        return _file.exists() ? _file.length() : null;
+        if (_csize == null) {
+            if (_file.exists()) {
+                _csize = _file.length();
+            }
+        }
+        return _csize;
     }
 
     @Override
@@ -45,13 +51,18 @@ public class FileInfo extends AbsoluteObjectInfo {
     }
 
     public void setCRC32() throws Throwable {
-        if (checksum() == null || checksum().type() != Checksum.Type.CRC32) {
-            try {
-                setChecksum(calculateCRC32(_file));
-            } catch (Throwable e) {
-                setChecksum(null);
-                throw e;
+        if (exists()) {
+            if (checksum() == null
+                    || checksum().type() != Checksum.Type.CRC32) {
+                try {
+                    setChecksum(calculateCRC32(_file));
+                } catch (Throwable e) {
+                    setChecksum(null);
+                    throw e;
+                }
             }
+        } else {
+            setChecksum(null);
         }
     }
 

@@ -28,8 +28,7 @@ public class AssetFileCollectionChecker
 
     @Override
     protected void execute(ExecutorService executor, boolean csumCheck,
-            ResultHandler<AssetInfo, FileInfo> rh)
-                    throws Throwable {
+            ResultHandler<AssetInfo, FileInfo> rh) throws Throwable {
         int idx = 1;
         int size = PAGE_SIZE;
         while (true) {
@@ -41,7 +40,8 @@ public class AssetFileCollectionChecker
             w.add("xpath", new String[] { "ename", "namespace" }, "namespace");
             w.add("xpath", new String[] { "ename", "name" }, "name");
             w.add("xpath", new String[] { "ename", "size" }, "content/size");
-            w.add("xpath", new String[] { "ename", "csum" }, "content/csum");
+            w.add("xpath", new String[] { "ename", "csum" },
+                    "content/csum");
             XmlDoc.Element re = _cxn.execute("asset.query", w.document(), null,
                     null);
             boolean complete = re.booleanValue("cursor/total/@complete");
@@ -49,8 +49,16 @@ public class AssetFileCollectionChecker
                 List<XmlDoc.Element> aes = re.elements("asset");
                 for (final XmlDoc.Element ae : aes) {
                     // check individual (pair)
+                    String assetId = ae.value("@id");
+                    String assetNamespace = ae.value("namespace");
+                    String assetName = ae.value("name");
+                    Long csize = ae.longValue("size", null);
+                    String csum = ae.value("csum");
+                    Checksum checksum = csum == null ? null
+                            : new Checksum(Checksum.Type.CRC32, csum, 16);
                     AssetFileChecker checker = AssetFileChecker.create(
-                            _baseNamespace, _baseDir, ae, csumCheck, rh);
+                            _baseNamespace, _baseDir, assetId, assetNamespace,
+                            assetName, csize, checksum, csumCheck, rh);
                     executor.execute(checker);
                 }
             }

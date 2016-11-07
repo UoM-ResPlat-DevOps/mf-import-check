@@ -19,11 +19,14 @@ public class FileAssetCollectionChecker
     private String _baseNamespace;
     private File _baseDir;
 
-    protected FileAssetCollectionChecker(ServerClient.Connection cxn,
+    public FileAssetCollectionChecker(ServerClient.Connection cxn,
             String baseNamespace, File baseDir, boolean csumCheck,
             ResultHandler<FileInfo, AssetInfo> resultHandler,
             int numberOfThreads) {
         super(csumCheck, resultHandler, numberOfThreads);
+        _cxn = cxn;
+        _baseNamespace = baseNamespace;
+        _baseDir = baseDir;
     }
 
     @Override
