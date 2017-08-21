@@ -9,34 +9,36 @@ import vicnode.checker.Result;
 import vicnode.checker.ResultHandler;
 import vicnode.checker.mf.AssetInfo;
 import vicnode.checker.util.PathUtils;
+import vicnode.mf.client.MFSession;
 
-public class FileAssetChecker
-        extends AbstractObjectChecker<FileInfo, AssetInfo> {
+public class FileAssetChecker extends AbstractObjectChecker<FileInfo, AssetInfo> {
 
-    private ServerClient.Connection _cxn;
+    private MFSession _session;
 
-    protected FileAssetChecker(ServerClient.Connection cxn, FileInfo object1,
-            AssetInfo object2, boolean csumCheck,
+    protected FileAssetChecker(MFSession session, FileInfo object1, AssetInfo object2, boolean csumCheck,
             ResultHandler<FileInfo, AssetInfo> rh) {
         super(object1, object2, csumCheck, rh);
-        _cxn = cxn;
+        _session = session;
     }
 
     @Override
-    public void check(FileInfo object1, AssetInfo object2, boolean csumCheck,
-            ResultHandler<FileInfo, AssetInfo> rh) {
+    public void check(FileInfo object1, AssetInfo object2, boolean csumCheck, ResultHandler<FileInfo, AssetInfo> rh) {
         rh.checking(object1, object2);
         try {
             object1.setCRC32();
-            object2.updateMetadata(_cxn);
+            ServerClient.Connection cxn = _session.connect();
+            try {
+                object2.updateMetadata(cxn);
+            } finally {
+                cxn.close();
+            }
         } catch (Throwable e) {
             e.printStackTrace(System.err);
         }
         /*
          * result (check happens in the constructor).
          */
-        Result<FileInfo, AssetInfo> result = new Result<FileInfo, AssetInfo>(
-                object1, object2);
+        Result<FileInfo, AssetInfo> result = new Result<FileInfo, AssetInfo>(object1, object2);
 
         /*
          * call result handler
@@ -44,13 +46,11 @@ public class FileAssetChecker
         rh.checked(result);
     }
 
-    public static FileAssetChecker create(ServerClient.Connection cxn,
-            String baseNamespace, File baseDir, Path path, boolean csumCheck,
-            ResultHandler<FileInfo, AssetInfo> rh) {
+    public static FileAssetChecker create(MFSession session, String baseNamespace, File baseDir, Path path,
+            boolean csumCheck, ResultHandler<FileInfo, AssetInfo> rh) {
         FileInfo file = new FileInfo(baseDir, path.toFile());
-        AssetInfo asset = new AssetInfo(baseNamespace,
-                PathUtils.joinPaths(baseNamespace, file.relativePath()));
-        return new FileAssetChecker(cxn, file, asset, csumCheck, rh);
+        AssetInfo asset = new AssetInfo(baseNamespace, PathUtils.joinPaths(baseNamespace, file.relativePath()));
+        return new FileAssetChecker(session, file, asset, csumCheck, rh);
     }
 
 }

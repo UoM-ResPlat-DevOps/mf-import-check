@@ -4,7 +4,7 @@
 
 	<groupId>vicnode</groupId>
 	<artifactId>mf-import-check</artifactId>
-	<version>0.0.8</version>
+	<version>0.0.9</version>
 	<packaging>jar</packaging>
 
 	<name>mf-import-check</name>
@@ -69,6 +69,11 @@
 							<descriptors>
 								<descriptor>src/main/assembly/make-zip.xml</descriptor>
 							</descriptors>
+							<archiverConfig>
+								<directoryMode>0755</directoryMode>
+								<defaultDirectoryMode>0755</defaultDirectoryMode>
+								<fileMode>0644</fileMode>
+							</archiverConfig>
 						</configuration>
 					</execution>
 				</executions>
