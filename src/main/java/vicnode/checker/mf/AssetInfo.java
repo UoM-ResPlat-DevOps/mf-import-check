@@ -1,11 +1,11 @@
 package vicnode.checker.mf;
 
-import arc.mf.client.ServerClient;
 import arc.xml.XmlDoc;
 import arc.xml.XmlStringWriter;
 import vicnode.checker.AbsoluteObjectInfo;
 import vicnode.checker.Checksum;
 import vicnode.checker.util.PathUtils;
+import vicnode.mf.client.MFSession;
 
 public class AssetInfo extends AbsoluteObjectInfo {
 
@@ -76,17 +76,17 @@ public class AssetInfo extends AbsoluteObjectInfo {
         _csize = size;
     }
 
-    public XmlDoc.Element resolveMetadata(ServerClient.Connection cxn)
+    public XmlDoc.Element resolveMetadata(MFSession session)
             throws Throwable {
         XmlStringWriter w = new XmlStringWriter();
         w.add("id", "path=" + _assetPath);
-        XmlDoc.Element ae = cxn.execute("asset.get", w.document(), null, null)
+        XmlDoc.Element ae = session.execute("asset.get", w.document(), null, null)
                 .element("asset");
         return ae;
     }
 
-    public void updateMetadata(ServerClient.Connection cxn) throws Throwable {
-        XmlDoc.Element ae = resolveMetadata(cxn);
+    public void updateMetadata(MFSession session) throws Throwable {
+        XmlDoc.Element ae = resolveMetadata(session);
         update(ae);
     }
 

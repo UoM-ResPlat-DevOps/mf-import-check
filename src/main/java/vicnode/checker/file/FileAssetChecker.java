@@ -3,7 +3,6 @@ package vicnode.checker.file;
 import java.io.File;
 import java.nio.file.Path;
 
-import arc.mf.client.ServerClient;
 import vicnode.checker.AbstractObjectChecker;
 import vicnode.checker.Result;
 import vicnode.checker.ResultHandler;
@@ -26,12 +25,7 @@ public class FileAssetChecker extends AbstractObjectChecker<FileInfo, AssetInfo>
         rh.checking(object1, object2);
         try {
             object1.setCRC32();
-            ServerClient.Connection cxn = _session.connect();
-            try {
-                object2.updateMetadata(cxn);
-            } finally {
-                cxn.close();
-            }
+            object2.updateMetadata(_session);
         } catch (Throwable e) {
             e.printStackTrace(System.err);
         }
