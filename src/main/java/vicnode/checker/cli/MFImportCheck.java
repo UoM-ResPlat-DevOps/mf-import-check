@@ -208,6 +208,8 @@ public class MFImportCheck {
             }
 
             MFSession session = new MFSession(connectionSettings);
+            session.startPingServerPeriodically(60000);// ping server every 60
+                                                       // seconds;
 
             /*
              * Print result csv header line.
