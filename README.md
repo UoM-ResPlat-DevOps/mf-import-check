@@ -31,4 +31,6 @@ Options:
 ### Example
 Check a local directory against a Mediaflux namespace using AAF credentials, with checksum comparison and 2 threads on a Windows machine. Note the local Windows directory usage of "/" not "\".
 
+```
 mf-import-check --mf.host mediaflux.vicnode.org.au --mf.port 443 --mf.transport https --mf.auth aaf,unimelb:username,password --local-remote --max-threads 2 --output testing.csv "/projects/proj-demonstration-1128.4.15/new/testing 2" "c:/data/testing 2"
+```
