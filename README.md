@@ -24,7 +24,7 @@ Options:
     --local-remote                      If specified, check from local directory to remote mediaflux namespace. Otherwise, check from remote mediaflux namespace to local directory.
     --max-threads <number-of-threads>   Maximum number of threads. Defaults to 1.
     --no-csum-check                     Do not compare (crc32) checksums.
-    --output <file>                     Output file in CSV format.
+    --output <filename-prefix>          Output file name prefix. The output files will be appended with date & time.
     --quiet                             If specified, no progress message is printed to stdout.
 ```
 
