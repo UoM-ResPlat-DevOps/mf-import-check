@@ -3,8 +3,9 @@ A command line tool to compare remote Mediaflux namespace with local directory. 
 
 ## I. Installation
 
-  1. Download latest release from: [https://github.com/UoM-ResPlat-DevOps/mf-import-check/releases](https://github.com/UoM-ResPlat-DevOps/mf-import-check/releases)
-  2. Unzip it to the destination directory:
+  1. Java 8 (JRE or JDK) is required.
+  2. Download latest release from: [https://github.com/UoM-ResPlat-DevOps/mf-import-check/releases](https://github.com/UoM-ResPlat-DevOps/mf-import-check/releases)
+  3. Unzip it to the destination directory:
     * ```cd opt; sudo unzip ~/Downloads/mf-import-check-x.x.x.zip```
 
 ## II. Tools
